@@ -1,0 +1,132 @@
+.page {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 28px;
+
+  @media (max-width: 1024px) {
+    padding: 22px 16px;
+    gap: 18px;
+  }
+}
+
+.header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 18px;
+}
+
+.header p {
+  margin-top: 6px;
+}
+
+.hint {
+  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  background: var(--social-bg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field span {
+  font-size: 14px;
+  color: var(--text);
+}
+
+input {
+  font: 16px/135% var(--mono);
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  box-sizing: border-box;
+}
+
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn {
+  font-size: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+  cursor: pointer;
+  font-family: var(--mono);
+}
+
+.btn:hover {
+  border-color: var(--accent-border);
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.result {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.result pre {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--code-bg);
+  color: var(--text-h);
+  overflow: auto;
+  font: 13px/150% var(--mono);
+}
+
+.result.muted pre {
+  color: var(--text);
+}
+
+.result.error pre {
+  border: 1px solid var(--accent-border);
+}
