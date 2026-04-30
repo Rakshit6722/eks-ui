@@ -2,7 +2,7 @@
 
 ## Inventory Console (sample UI)
 
-This UI calls the inventory-service endpoints under `/api/inventory`.
+This UI calls the inventory-service endpoints under `/api/inventory` and includes a Postgres database health check.
 
 ### Run locally
 
@@ -17,6 +17,17 @@ By default, the Vite dev server proxies `/api/*` to `https://eks.rakshitdeploys.
 	- Optional.
 	- If set, the UI will call `${VITE_API_BASE_URL}/api/inventory/...` directly.
 	- If not set, the UI calls same-origin paths like `/api/inventory/health`.
+
+### API surface used by the UI
+
+- `GET /api/inventory/health`
+	- Service status and inventory count.
+- `GET /api/inventory/db-health`
+	- Verifies the service can reach Postgres.
+- `GET /api/inventory/items/:id`
+	- Reads an item from Postgres when configured.
+- `POST /api/inventory/items/:id/reserve`
+	- Reserves stock transactionally in Postgres when configured.
 
 - `VITE_API_PROXY_TARGET`
 	- Optional (dev only).

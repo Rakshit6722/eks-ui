@@ -35,6 +35,7 @@ function App() {
   )
 
   const [healthState, setHealthState] = useState({ loading: false })
+  const [dbHealthState, setDbHealthState] = useState({ loading: false })
   const [getItemState, setGetItemState] = useState({ loading: false })
   const [reserveState, setReserveState] = useState({ loading: false })
 
@@ -49,6 +50,16 @@ function App() {
       setHealthState({ loading: false, data })
     } catch (err) {
       setHealthState({ loading: false, error: err.message, details: err.payload })
+    }
+  }
+
+  async function runDbHealthCheck() {
+    setDbHealthState({ loading: true })
+    try {
+      const data = await apiRequest(baseUrl, '/api/inventory/db-health')
+      setDbHealthState({ loading: false, data })
+    } catch (err) {
+      setDbHealthState({ loading: false, error: err.message, details: err.payload })
     }
   }
 
@@ -88,7 +99,7 @@ function App() {
       <header className="header">
         <h1>Inventory Console</h1>
         <p>
-          Calls <code>/api/inventory</code> on <code>eks.rakshitdeploys.com</code>
+          Talks to the inventory API and its Postgres-backed item store.
         </p>
         <p className="hint">
           {apiHint}. Set <code>VITE_API_BASE_URL</code> to override.
@@ -98,7 +109,7 @@ function App() {
       <main className="grid">
         <section className="card" aria-label="Health check">
           <h2>Health</h2>
-          <p>Checks service status and item count.</p>
+          <p>Checks service status and the active inventory count.</p>
           <div className="row">
             <button
               type="button"
@@ -112,9 +123,25 @@ function App() {
           <ResultBox state={healthState} />
         </section>
 
+        <section className="card" aria-label="Database health">
+          <h2>Database health</h2>
+          <p>Verifies the service can reach Postgres and run a query.</p>
+          <div className="row">
+            <button
+              type="button"
+              className="btn"
+              onClick={runDbHealthCheck}
+              disabled={dbHealthState.loading}
+            >
+              {dbHealthState.loading ? 'Checking…' : 'Run DB check'}
+            </button>
+          </div>
+          <ResultBox state={dbHealthState} />
+        </section>
+
         <section className="card" aria-label="Get item">
           <h2>Get item</h2>
-          <p>Fetches item details by id.</p>
+          <p>Fetches item details by id from Postgres when configured.</p>
           <form onSubmit={runGetItem} className="form">
             <label className="field">
               <span>Item ID</span>
@@ -134,7 +161,7 @@ function App() {
 
         <section className="card" aria-label="Reserve stock">
           <h2>Reserve stock</h2>
-          <p>Reserves quantity if stock is available.</p>
+          <p>Reserves stock transactionally in Postgres if available.</p>
           <form onSubmit={runReserve} className="form">
             <label className="field">
               <span>Item ID</span>
