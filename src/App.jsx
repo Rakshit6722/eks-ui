@@ -39,9 +39,19 @@ function App() {
   const [getItemState, setGetItemState] = useState({ loading: false })
   const [reserveState, setReserveState] = useState({ loading: false })
 
+  const [orderHealthState, setOrderHealthState] = useState({ loading: false })
+  const [orderDbHealthState, setOrderDbHealthState] = useState({ loading: false })
+  const [createOrderState, setCreateOrderState] = useState({ loading: false })
+  const [getOrderState, setGetOrderState] = useState({ loading: false })
+
   const [itemId, setItemId] = useState('item-1')
   const [reserveItemId, setReserveItemId] = useState('item-1')
   const [quantity, setQuantity] = useState(1)
+
+  const [orderItemId, setOrderItemId] = useState('item-1')
+  const [orderQuantity, setOrderQuantity] = useState(1)
+  const [orderTo, setOrderTo] = useState('customer@example.com')
+  const [orderId, setOrderId] = useState('1')
 
   async function runHealthCheck() {
     setHealthState({ loading: true })
@@ -90,6 +100,57 @@ function App() {
     }
   }
 
+  async function runOrderHealthCheck() {
+    setOrderHealthState({ loading: true })
+    try {
+      const data = await apiRequest(baseUrl, '/api/orders/health')
+      setOrderHealthState({ loading: false, data })
+    } catch (err) {
+      setOrderHealthState({ loading: false, error: err.message, details: err.payload })
+    }
+  }
+
+  async function runOrderDbHealthCheck() {
+    setOrderDbHealthState({ loading: true })
+    try {
+      const data = await apiRequest(baseUrl, '/api/orders/db-health')
+      setOrderDbHealthState({ loading: false, data })
+    } catch (err) {
+      setOrderDbHealthState({ loading: false, error: err.message, details: err.payload })
+    }
+  }
+
+  async function runCreateOrder(e) {
+    e.preventDefault()
+    setCreateOrderState({ loading: true })
+    try {
+      const data = await apiRequest(baseUrl, '/api/orders', {
+        method: 'POST',
+        body: {
+          itemId: orderItemId.trim(),
+          quantity: Number(orderQuantity),
+          to: orderTo.trim(),
+        },
+      })
+      setCreateOrderState({ loading: false, data })
+      if (data?.id) setOrderId(String(data.id))
+    } catch (err) {
+      setCreateOrderState({ loading: false, error: err.message, details: err.payload })
+    }
+  }
+
+  async function runGetOrder(e) {
+    e.preventDefault()
+    setGetOrderState({ loading: true })
+    try {
+      const safeId = encodeURIComponent(orderId.trim())
+      const data = await apiRequest(baseUrl, `/api/orders/${safeId}`)
+      setGetOrderState({ loading: false, data })
+    } catch (err) {
+      setGetOrderState({ loading: false, error: err.message, details: err.payload })
+    }
+  }
+
   const apiHint = baseUrl
     ? `Using base URL: ${baseUrl}`
     : 'Using same-origin base URL ("/api/")'
@@ -97,9 +158,9 @@ function App() {
   return (
     <div className="page">
       <header className="header">
-        <h1>Inventory Console</h1>
+        <h1>EKS Console</h1>
         <p>
-          Talks to the inventory API and its Postgres-backed item store.
+          Inventory + Orders, backed by the same Postgres database.
         </p>
         <p className="hint">
           {apiHint}. Set <code>VITE_API_BASE_URL</code> to override.
@@ -107,6 +168,11 @@ function App() {
       </header>
 
       <main className="grid">
+        <section className="card" aria-label="Inventory overview">
+          <h2>Inventory</h2>
+          <p>Service health, DB check, lookups, and reserving stock.</p>
+        </section>
+
         <section className="card" aria-label="Health check">
           <h2>Health</h2>
           <p>Checks service status and the active inventory count.</p>
@@ -187,6 +253,104 @@ function App() {
             </button>
           </form>
           <ResultBox state={reserveState} />
+        </section>
+
+        <section className="card" aria-label="Orders overview">
+          <h2>Orders</h2>
+          <p>Create and retrieve orders through the order API.</p>
+        </section>
+
+        <section className="card" aria-label="Order health check">
+          <h2>Order health</h2>
+          <p>Checks order-service status and DB configuration.</p>
+          <div className="row">
+            <button
+              type="button"
+              className="btn"
+              onClick={runOrderHealthCheck}
+              disabled={orderHealthState.loading}
+            >
+              {orderHealthState.loading ? 'Checking…' : 'Run order health check'}
+            </button>
+          </div>
+          <ResultBox state={orderHealthState} />
+        </section>
+
+        <section className="card" aria-label="Order database health">
+          <h2>Order DB health</h2>
+          <p>Verifies order-service can reach Postgres and run a query.</p>
+          <div className="row">
+            <button
+              type="button"
+              className="btn"
+              onClick={runOrderDbHealthCheck}
+              disabled={orderDbHealthState.loading}
+            >
+              {orderDbHealthState.loading ? 'Checking…' : 'Run order DB check'}
+            </button>
+          </div>
+          <ResultBox state={orderDbHealthState} />
+        </section>
+
+        <section className="card" aria-label="Create order">
+          <h2>Create order</h2>
+          <p>
+            Checks inventory, reserves stock, and stores the order in Postgres.
+          </p>
+          <form onSubmit={runCreateOrder} className="form">
+            <label className="field">
+              <span>Item ID</span>
+              <input
+                value={orderItemId}
+                onChange={(e) => setOrderItemId(e.target.value)}
+                placeholder="item-1"
+                autoComplete="off"
+              />
+            </label>
+            <label className="field">
+              <span>Quantity</span>
+              <input
+                value={orderQuantity}
+                onChange={(e) => setOrderQuantity(e.target.value)}
+                type="number"
+                min="1"
+                step="1"
+              />
+            </label>
+            <label className="field">
+              <span>Notify email</span>
+              <input
+                value={orderTo}
+                onChange={(e) => setOrderTo(e.target.value)}
+                placeholder="customer@example.com"
+                autoComplete="off"
+              />
+            </label>
+            <button type="submit" className="btn" disabled={createOrderState.loading}>
+              {createOrderState.loading ? 'Creating…' : 'Create order'}
+            </button>
+          </form>
+          <ResultBox state={createOrderState} />
+        </section>
+
+        <section className="card" aria-label="Get order">
+          <h2>Get order</h2>
+          <p>Fetches order details by id.</p>
+          <form onSubmit={runGetOrder} className="form">
+            <label className="field">
+              <span>Order ID</span>
+              <input
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value)}
+                placeholder="1"
+                autoComplete="off"
+              />
+            </label>
+            <button type="submit" className="btn" disabled={getOrderState.loading}>
+              {getOrderState.loading ? 'Loading…' : 'Fetch order'}
+            </button>
+          </form>
+          <ResultBox state={getOrderState} />
         </section>
       </main>
     </div>
